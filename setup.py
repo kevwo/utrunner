@@ -11,11 +11,10 @@ packages = [
 ]
 
 setup(name='utrunner',
-      version='0.0.1',
+      version='0.0.2',
       url='https://github.com/kevwo/utrunner',
       zip_safe=False,
       packages=packages,
-      package_data={'utrunner': ['skeleton/*.*']},
       package_dir={'utrunner': 'utrunner'},
       description='Simple test runner that wraps unittest and Coverage',
       author='Kevin Woodmansee',

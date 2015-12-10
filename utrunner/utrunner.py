@@ -1,13 +1,14 @@
+import sys
 import os
 import unittest
 import pkgutil
 import webbrowser
 import coverage
 import optparse
+from utrunner import jsontestrunner
 
 
-def discover_and_run_tests(test_dir):
-
+def discover_and_run_tests(test_dir, json_file_path=None):
     # Separate output from the invoking command
     print("=" * 70)
 
@@ -22,12 +23,20 @@ def discover_and_run_tests(test_dir):
         for test in test_loader.loadTestsFromModule(mod):
             test_suite.addTests(test)
 
-    # use the basic test runner that outputs to sys.stderr
-    test_runner = unittest.TextTestRunner()
-    return test_runner.run(test_suite)
+    if json_file_path is not None:
+        # open file
+        with open(json_file_path, 'w') as f:
+            # use the custom JSON test runner
+            test_runner = jsontestrunner.JSONTestRunner(f)
+            results = test_runner.run(test_suite)
+    else:
+        # use the basic test runner that outputs to sys.stderr
+        test_runner = unittest.TextTestRunner()
+        results = test_runner.run(test_suite)
+    return results
 
 
-def test_with_coverage(source_directory=None, test_directory=None, html=False, report=False, force=False):
+def test_with_coverage(source_directory=None, test_directory=None, html=False, report=False, json_file_path=None, force=False):
     current_dir = os.getcwd()
     if source_directory is None:
         source_directory = os.path.split(current_dir)[1]
@@ -39,7 +48,7 @@ def test_with_coverage(source_directory=None, test_directory=None, html=False, r
     if report or html:
         cov = coverage.Coverage(source=[source_directory])
         cov.start()
-        result = discover_and_run_tests(test_directory)
+        result = discover_and_run_tests(test_directory, json_file_path)
         cov.stop()
         cov.save()
         if result.wasSuccessful() or force:
@@ -48,9 +57,9 @@ def test_with_coverage(source_directory=None, test_directory=None, html=False, r
                 webbrowser.open(os.path.join(current_dir, 'htmlcov', 'index.html'))
             if report:
                 cov.report()
-
     else:
-        result = discover_and_run_tests(test_directory)
+        results = discover_and_run_tests(test_directory, json_file_path)
+
 
 def main():
     parser = optparse.OptionParser("usage: %prog [options]")
@@ -64,5 +73,15 @@ def main():
                       help="Generate an text report and displays to the console")
     parser.add_option("-f", '--force', action="store_true", default=False, dest="force",
                       help="Continue with specified reporting even if unit tests fail")
+    parser.add_option("-j", "--json", dest="json_file_path", default=None, type="string",
+                      help="Output via JSON test results format to FILE", metavar="FILE")
     (options, args) = parser.parse_args()
-    test_with_coverage(**options.__dict__)
+    input_args = options.__dict__
+
+    # Validate json file input
+    file_path = input_args.get('json_file_path', None)
+    if file_path is not None:
+        # default to local directory if just a filename
+        directory = os.path.dirname(file_path[0]) or '.'
+        os.makedirs(directory, exist_ok=True)
+    test_with_coverage(**input_args)
