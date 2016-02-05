@@ -5,10 +5,10 @@ import pkgutil
 import webbrowser
 import coverage
 import optparse
-from utrunner import jsontestrunner
+from utrunner import jsontestrunner, wrappers
 
 
-def discover_and_run_tests(test_dir, json_file_path=None):
+def discover_and_run_tests(test_dir, timer=False, json_file_path=None):
     # Separate output from the invoking command
     print("=" * 70)
 
@@ -18,9 +18,13 @@ def discover_and_run_tests(test_dir, json_file_path=None):
     test_suite = unittest.TestSuite()
 
     #  discover all tests in .\tests directory
+    timings = []
     for imp, modname, _ in pkgutil.walk_packages([test_dir]):
         mod = imp.find_module(modname).load_module(modname)
         for test in test_loader.loadTestsFromModule(mod):
+            if timer:
+                for item in test._tests:
+                    item.run = wrappers.timing(item.run, item._testMethodName, timings)
             test_suite.addTests(test)
 
     if json_file_path is not None:
@@ -33,10 +37,17 @@ def discover_and_run_tests(test_dir, json_file_path=None):
         # use the basic test runner that outputs to sys.stderr
         test_runner = unittest.TextTestRunner()
         results = test_runner.run(test_suite)
+    if timer:
+        sorted_timings = sorted(timings, key=lambda x: x[1], reverse=True)
+        print()
+        print("Timings (in milliseconds):")
+        print()
+        for item in sorted_timings:
+            print("{} {}".format(item[0], item[1]))
     return results
 
 
-def test_with_coverage(source_directory=None, test_directory=None, html=False, report=False, json_file_path=None, force=False):
+def test_with_coverage(source_directory=None, test_directory=None, html=False, timer=False, report=False, json_file_path=None, force=False):
     current_dir = os.getcwd()
     if source_directory is None:
         source_directory = os.path.split(current_dir)[1]
@@ -48,7 +59,7 @@ def test_with_coverage(source_directory=None, test_directory=None, html=False, r
     if report or html:
         cov = coverage.Coverage(source=[source_directory])
         cov.start()
-        result = discover_and_run_tests(test_directory, json_file_path)
+        result = discover_and_run_tests(test_directory, timer, json_file_path)
         cov.stop()
         cov.save()
         if result.wasSuccessful() or force:
@@ -58,7 +69,7 @@ def test_with_coverage(source_directory=None, test_directory=None, html=False, r
             if report:
                 cov.report()
     else:
-        results = discover_and_run_tests(test_directory, json_file_path)
+        results = discover_and_run_tests(test_directory, timer, json_file_path)
 
 
 def main():
@@ -67,10 +78,12 @@ def main():
                       help="Location of source files (for determining code coverage)")
     parser.add_option("-t", "--tests", dest="test_directory", default=None, type="string",
                       help="Location of unit test files")
+    parser.add_option('--timer', action="store_true", default=False, dest="timer",
+                      help="Times the individual unittest execution times")
     parser.add_option("-w", '--web', action="store_true", default=False, dest="html",
                       help="Generate an HTML report and opens the report in the default web browser")
     parser.add_option("-r", '--report', action="store_true", default=False, dest="report",
-                      help="Generate an text report and displays to the console")
+                      help="Generate a text report and displays to the console")
     parser.add_option("-f", '--force', action="store_true", default=False, dest="force",
                       help="Continue with specified reporting even if unit tests fail")
     parser.add_option("-j", "--json", dest="json_file_path", default=None, type="string",
