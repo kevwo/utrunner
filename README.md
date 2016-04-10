@@ -11,6 +11,11 @@ python -m utrunner -h
 python -m utrunner -w
 ```
 
+### Automatically attach debugger when a test case fails
+```
+python -m utrunner -d
+```
+
 ### Compare the test execution time of unit tests to catch slow tests or missing mocks
 ```
 python -m utrunner --timer

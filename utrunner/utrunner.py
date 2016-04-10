@@ -8,7 +8,7 @@ import optparse
 from utrunner import jsontestrunner, wrappers
 
 
-def discover_and_run_tests(test_dir, timer=False, json_file_path=None):
+def discover_and_run_tests(test_dir, timer=False, debug=False, json_file_path=None):
     # Separate output from the invoking command
     print("=" * 70)
 
@@ -25,6 +25,9 @@ def discover_and_run_tests(test_dir, timer=False, json_file_path=None):
             if timer:
                 for item in test._tests:
                     item.run = wrappers.timing(item.run, item._testMethodName, timings)
+            if debug:
+                for item in test._tests:
+                    wrappers.debug_testcase(item)
             test_suite.addTests(test)
 
     if json_file_path is not None:
@@ -47,7 +50,7 @@ def discover_and_run_tests(test_dir, timer=False, json_file_path=None):
     return results
 
 
-def test_with_coverage(source_directory=None, test_directory=None, html=False, timer=False, report=False, json_file_path=None, force=False):
+def test_with_coverage(source_directory=None, test_directory=None, html=False, timer=False, debug=False, report=False, json_file_path=None, force=False):
     current_dir = os.getcwd()
     if source_directory is None:
         source_directory = os.path.split(current_dir)[1]
@@ -59,7 +62,7 @@ def test_with_coverage(source_directory=None, test_directory=None, html=False, t
     if report or html:
         cov = coverage.Coverage(source=[source_directory])
         cov.start()
-        result = discover_and_run_tests(test_directory, timer, json_file_path)
+        result = discover_and_run_tests(test_directory, timer, debug, json_file_path)
         cov.stop()
         cov.save()
         if result.wasSuccessful() or force:
@@ -69,7 +72,7 @@ def test_with_coverage(source_directory=None, test_directory=None, html=False, t
             if report:
                 cov.report()
     else:
-        results = discover_and_run_tests(test_directory, timer, json_file_path)
+        results = discover_and_run_tests(test_directory, timer, debug, json_file_path)
 
 
 def main():
@@ -80,6 +83,8 @@ def main():
                       help="Location of unit test files")
     parser.add_option('--timer', action="store_true", default=False, dest="timer",
                       help="Times the individual unittest execution times")
+    parser.add_option('-d', '--debug', action="store_true", default=False, dest="debug",
+                      help="Attach debugger when a test case fails")
     parser.add_option("-w", '--web', action="store_true", default=False, dest="html",
                       help="Generate an HTML report and opens the report in the default web browser")
     parser.add_option("-r", '--report', action="store_true", default=False, dest="report",
