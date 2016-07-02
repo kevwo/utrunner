@@ -67,7 +67,7 @@ D:/dev/myproject/unittests/sampletestfile.py
 ```
 
 ### Considerations
-You will likely want to add the following to your projects .gitignore as they are used to story the most recent coverage results
+You will likely want to add the following to your projects .gitignore as they are used to store the most recent coverage results
 ```
 htmlcov/
 .coverage
