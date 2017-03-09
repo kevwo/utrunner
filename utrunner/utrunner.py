@@ -62,10 +62,10 @@ def test_with_coverage(source_directory=None, test_directory=None, html=False, t
     if report or html:
         cov = coverage.Coverage(source=[source_directory])
         cov.start()
-        result = discover_and_run_tests(test_directory, timer, debug, json_file_path)
+        results = discover_and_run_tests(test_directory, timer, debug, json_file_path)
         cov.stop()
         cov.save()
-        if result.wasSuccessful() or force:
+        if results.wasSuccessful() or force:
             if html:
                 cov.html_report()
                 webbrowser.open(os.path.join(current_dir, 'htmlcov', 'index.html'))
@@ -73,6 +73,7 @@ def test_with_coverage(source_directory=None, test_directory=None, html=False, t
                 cov.report()
     else:
         results = discover_and_run_tests(test_directory, timer, debug, json_file_path)
+    return results
 
 
 def main():
@@ -88,7 +89,7 @@ def main():
     parser.add_option("-w", '--web', action="store_true", default=False, dest="html",
                       help="Generate an HTML report and opens the report in the default web browser")
     parser.add_option("-r", '--report', action="store_true", default=False, dest="report",
-                      help="Generate a text report and displays to the console")
+                      help="Generate a text report and displ$qays to the console")
     parser.add_option("-f", '--force', action="store_true", default=False, dest="force",
                       help="Continue with specified reporting even if unit tests fail")
     parser.add_option("-j", "--json", dest="json_file_path", default=None, type="string",
@@ -102,4 +103,5 @@ def main():
         # default to local directory if just a filename
         directory = os.path.dirname(file_path[0]) or '.'
         os.makedirs(directory, exist_ok=True)
-    test_with_coverage(**input_args)
+    results = test_with_coverage(**input_args)
+    sys.exit(not results.wasSuccessful() * 1)
