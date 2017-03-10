@@ -50,7 +50,7 @@ def discover_and_run_tests(test_dir, timer=False, debug=False, json_file_path=No
     return results
 
 
-def test_with_coverage(source_directory=None, test_directory=None, html=False, timer=False, debug=False, report=False, json_file_path=None, force=False):
+def test_with_coverage(source_directory=None, test_directory=None, html=False, html_and_launch=False, timer=False, debug=False, report=False, json_file_path=None, force=False):
     current_dir = os.getcwd()
     if source_directory is None:
         source_directory = os.path.split(current_dir)[1]
@@ -59,7 +59,7 @@ def test_with_coverage(source_directory=None, test_directory=None, html=False, t
     source_directory = os.path.join(current_dir, source_directory)
     test_directory = os.path.join(current_dir, test_directory)
 
-    if report or html:
+    if report or html or html_and_launch:
         cov = coverage.Coverage(source=[source_directory])
         cov.start()
         results = discover_and_run_tests(test_directory, timer, debug, json_file_path)
@@ -68,7 +68,8 @@ def test_with_coverage(source_directory=None, test_directory=None, html=False, t
         if results.wasSuccessful() or force:
             if html:
                 cov.html_report()
-                webbrowser.open(os.path.join(current_dir, 'htmlcov', 'index.html'))
+                if html_and_launch:
+                    webbrowser.open(os.path.join(current_dir, 'htmlcov', 'index.html'))
             if report:
                 cov.report()
     else:
@@ -86,7 +87,9 @@ def main():
                       help="Times the individual unittest execution times")
     parser.add_option('-d', '--debug', action="store_true", default=False, dest="debug",
                       help="Attach debugger when a test case fails")
-    parser.add_option("-w", '--web', action="store_true", default=False, dest="html",
+    parser.add_option("-c", '--coverage', action="store_true", default=False, dest="html",
+                      help="Generate an HTML report")
+    parser.add_option("-w", '--web', action="store_true", default=False, dest="html_and_launch",
                       help="Generate an HTML report and opens the report in the default web browser")
     parser.add_option("-r", '--report', action="store_true", default=False, dest="report",
                       help="Generate a text report and displ$qays to the console")
