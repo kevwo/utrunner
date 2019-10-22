@@ -71,4 +71,5 @@ You will likely want to add the following to your projects .gitignore as they ar
 ```
 htmlcov/
 .coverage
+coverage.xml
 ```
