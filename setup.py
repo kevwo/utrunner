@@ -11,7 +11,7 @@ packages = [
 ]
 
 setup(name='utrunner',
-      version='0.2.0',
+      version='0.3.0',
       url='https://github.com/kevwo/utrunner',
       zip_safe=False,
       packages=packages,

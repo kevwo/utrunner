@@ -50,7 +50,7 @@ def discover_and_run_tests(test_dir, timer=False, debug=False, json_file_path=No
     return results
 
 
-def test_with_coverage(source_directory=None, test_directory=None, html=False, html_and_launch=False, timer=False, debug=False, report=False, json_file_path=None, force=False):
+def test_with_coverage(source_directory=None, test_directory=None, xml=False, html=False, html_and_launch=False, timer=False, debug=False, report=False, json_file_path=None, force=False):
     current_dir = os.getcwd()
     if source_directory is None:
         source_directory = os.path.split(current_dir)[1]
@@ -72,6 +72,8 @@ def test_with_coverage(source_directory=None, test_directory=None, html=False, h
                     webbrowser.open(os.path.join(current_dir, 'htmlcov', 'index.html'))
             if report:
                 cov.report()
+            if xml:
+                cov.xml_report()
     else:
         results = discover_and_run_tests(test_directory, timer, debug, json_file_path)
     return results
@@ -91,8 +93,10 @@ def main():
                       help="Generate an HTML report")
     parser.add_option("-w", '--web', action="store_true", default=False, dest="html_and_launch",
                       help="Generate an HTML report and opens the report in the default web browser")
+    parser.add_option("-x", '--xml', action="store_true", default=False, dest="xml",
+                      help="Generate an XML report")
     parser.add_option("-r", '--report', action="store_true", default=False, dest="report",
-                      help="Generate a text report and displ$qays to the console")
+                      help="Generate a text report and displays to the console")
     parser.add_option("-f", '--force', action="store_true", default=False, dest="force",
                       help="Continue with specified reporting even if unit tests fail")
     parser.add_option("-j", "--json", dest="json_file_path", default=None, type="string",
